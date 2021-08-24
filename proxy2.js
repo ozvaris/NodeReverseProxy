@@ -1,16 +1,17 @@
 const express = require("express");
 const colorize = require("json-colorizer");
 const app = express();
-const decompressResponse = require('decompress-response');
+const decompressResponse = require("decompress-response");
 var cors = require("cors");
 
 app.use(cors());
 const { createProxyMiddleware } = require("http-proxy-middleware");
+const { response } = require("express");
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-console.log('\x1Bc');
+console.log("\x1Bc");
 
 //https://github.com/chimurai/http-proxy-middleware/issues/320
 //app.use(bodyParser.json()) breaks http-proxy-middleware for HTTP POST JSON with express
@@ -42,22 +43,25 @@ function doDecompress(decompressor, input) {
   var d1 = input.substr(0, 25);
   var d2 = input.substr(25);
 
-  sys.puts('Making decompression requests...');
-  var output = '';
-  decompressor.setInputEncoding('binary');
-  decompressor.setEncoding('utf8');
-  decompressor.addListener('data', function(data) {
-    output += data;
-  }).addListener('error', function(err) {
-    throw err;
-  }).addListener('end', function() {
-    sys.puts('Decompressed length: ' + output.length);
-    sys.puts('Raw data: ' + output);
-  });
+  sys.puts("Making decompression requests...");
+  var output = "";
+  decompressor.setInputEncoding("binary");
+  decompressor.setEncoding("utf8");
+  decompressor
+    .addListener("data", function (data) {
+      output += data;
+    })
+    .addListener("error", function (err) {
+      throw err;
+    })
+    .addListener("end", function () {
+      sys.puts("Decompressed length: " + output.length);
+      sys.puts("Raw data: " + output);
+    });
   decompressor.write(d1);
   decompressor.write(d2);
   decompressor.close();
-  sys.puts('Requests done.');
+  sys.puts("Requests done.");
 }
 
 const colorizeOptions = {
@@ -66,10 +70,21 @@ const colorizeOptions = {
     STRING_KEY: "white",
     STRING_LITERAL: "green",
     NUMBER_LITERAL: "#FF0000",
-   
-    
   },
-}
+};
+
+app.use("/clear", (req, res, next) => {
+  console.log("\x1Bc");
+  //req.header("Content-Type", "application/json");
+  res.send("Console Clear Ok 😀 " + new Date().toISOString());
+});
+
+// app.use((err, req, res, next) => {
+//   res.locals.error = err;
+//   const status = err.status || 500;
+//   res.status(status);
+//   res.render("error");
+// });
 
 app.use(
   "/api",
@@ -85,9 +100,7 @@ app.use(
     logLevel: "debug",
     onProxyReq: (proxyReq, req) => {
       console.log("request");
-      console.log(
-        colorize(req.body, colorizeOptions)
-      );
+      console.log(colorize(req.body, colorizeOptions));
       // Headers must be set before doing anything to the body.
       if (req?.userContext?.tokens?.access_token) {
         proxyReq.setHeader(
@@ -107,9 +120,7 @@ app.use(
         data = data.toString("utf-8");
         body += data;
         console.log("response");
-        console.log(
-          colorize(body.toString("utf8"), colorizeOptions)
-        );
+        console.log(colorize(body.toString("utf8"), colorizeOptions));
       });
     },
   })
