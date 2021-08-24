@@ -1,6 +1,7 @@
 const express = require("express");
 const colorize = require("json-colorizer");
 const app = express();
+const decompressResponse = require('decompress-response');
 var cors = require("cors");
 
 app.use(cors());
@@ -9,6 +10,7 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+console.log('\x1Bc');
 
 //https://github.com/chimurai/http-proxy-middleware/issues/320
 //app.use(bodyParser.json()) breaks http-proxy-middleware for HTTP POST JSON with express
@@ -36,6 +38,39 @@ function writeBody(proxyReq, bodyData) {
   proxyReq.write(bodyData);
 }
 
+function doDecompress(decompressor, input) {
+  var d1 = input.substr(0, 25);
+  var d2 = input.substr(25);
+
+  sys.puts('Making decompression requests...');
+  var output = '';
+  decompressor.setInputEncoding('binary');
+  decompressor.setEncoding('utf8');
+  decompressor.addListener('data', function(data) {
+    output += data;
+  }).addListener('error', function(err) {
+    throw err;
+  }).addListener('end', function() {
+    sys.puts('Decompressed length: ' + output.length);
+    sys.puts('Raw data: ' + output);
+  });
+  decompressor.write(d1);
+  decompressor.write(d2);
+  decompressor.close();
+  sys.puts('Requests done.');
+}
+
+const colorizeOptions = {
+  pretty: true,
+  colors: {
+    STRING_KEY: "white",
+    STRING_LITERAL: "green",
+    NUMBER_LITERAL: "#FF0000",
+   
+    
+  },
+}
+
 app.use(
   "/api",
   createProxyMiddleware({
@@ -51,14 +86,7 @@ app.use(
     onProxyReq: (proxyReq, req) => {
       console.log("request");
       console.log(
-        colorize(req.body, {
-          pretty: true,
-          colors: {
-            STRING_KEY: "white",
-            STRING_LITERAL: "green",
-            NUMBER_LITERAL: "#FF0000",
-          },
-        })
+        colorize(req.body, colorizeOptions)
       );
       // Headers must be set before doing anything to the body.
       if (req?.userContext?.tokens?.access_token) {
@@ -74,18 +102,13 @@ app.use(
 
       var body = "";
       proxyRes.on("data", function (data) {
+        //data = doDecompress(new compress.GunzipStream(), data.toString('binary'));
+        //data = decompressResponse(data);
         data = data.toString("utf-8");
         body += data;
         console.log("response");
         console.log(
-          colorize(body.toString("utf8"), {
-            pretty: true,
-            colors: {
-              STRING_KEY: "white",
-              STRING_LITERAL: "green",
-              NUMBER_LITERAL: "#FF0000",
-            },
-          })
+          colorize(body.toString("utf8"), colorizeOptions)
         );
       });
     },
