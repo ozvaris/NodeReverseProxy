@@ -79,6 +79,12 @@ app.use("/clear", (req, res, next) => {
   res.send("Console Clear Ok 😀 " + new Date().toISOString());
 });
 
+app.use("/test", (req, res, next) => {
+  console.log(`test: Ok  😀 ${new Date().toISOString()}`);
+  //req.header("Content-Type", "application/json");
+  res.send(`test: Ok  😀 ${new Date().toISOString()}`);
+});
+
 // app.use((err, req, res, next) => {
 //   res.locals.error = err;
 //   const status = err.status || 500;
@@ -117,9 +123,9 @@ app.use(
       proxyRes.on("data", function (data) {
         //data = doDecompress(new compress.GunzipStream(), data.toString('binary'));
         //data = decompressResponse(data);
+        console.log("response", res.statusCode);
         data = data.toString("utf-8");
         body += data;
-        console.log("response");
         console.log(colorize(body.toString("utf8"), colorizeOptions));
       });
     },
