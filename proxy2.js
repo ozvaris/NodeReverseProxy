@@ -3,6 +3,7 @@ const colorize = require("json-colorizer");
 const app = express();
 const decompressResponse = require("decompress-response");
 var cors = require("cors");
+const { baseUrl } = require('./config');
 
 app.use(cors());
 const { createProxyMiddleware } = require("http-proxy-middleware");
@@ -95,17 +96,19 @@ app.use("/test", (req, res, next) => {
 app.use(
   "/api",
   createProxyMiddleware({
-    target: "http://localhost:3001", //original url
+    target: baseUrl, //original url
     changeOrigin: true,
     //secure: false,
     pathRewrite(pathReq, req) {
       let url = pathReq;
-      console.log(url);
+      console.log('\x1b[33m%s\x1b[0m',url);
       return url;
     },
     logLevel: "debug",
     onProxyReq: (proxyReq, req) => {
       console.log("request");
+      console.log(req.headers);
+      console.log("body");
       console.log(colorize(req.body, colorizeOptions));
       // Headers must be set before doing anything to the body.
       if (req?.userContext?.tokens?.access_token) {
