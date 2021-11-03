@@ -3,7 +3,7 @@ const colorize = require("json-colorizer");
 const app = express();
 const decompressResponse = require("decompress-response");
 var cors = require("cors");
-const { baseUrl } = require('./config');
+const { baseUrl, PORT } = require('./config');
 
 app.use(cors());
 const { createProxyMiddleware } = require("http-proxy-middleware");
@@ -150,4 +150,6 @@ app.post("/api", (req, res, next) => {
   next();
 });
 
-app.listen(5000);
+console.log(`Proxy Listen Port ${PORT}`);
+
+app.listen(PORT);
